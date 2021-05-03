@@ -20,7 +20,7 @@ const User = class extends Sequelize.Model {
         provider: {
           type: Sequelize.STRING(10),
           allowNull: false,
-          defualtValue: "local",
+          defaultValue: "local",
         },
         snsId: {
           type: Sequelize.STRING(30),
@@ -39,6 +39,7 @@ const User = class extends Sequelize.Model {
       }
     );
   }
+
   static associate(db) {
     db.User.hasMany(db.Post);
     db.User.belongsToMany(db.User, {

@@ -8,11 +8,15 @@ import dotenv from "dotenv";
 import passport from "passport";
 
 import pageRouter from "./routes/page.js";
+import authRouter from "./routes/auth.js";
+import postRouter from "./routes/post.js";
+import userRouter from "./routes/user.js";
 import sequelize from "./models/index.js";
-import passportConfig from "./passport";
+import passportConfig from "./passport/index.js";
 
 dotenv.config();
 const __dirname = path.resolve();
+passportConfig();
 
 const app = express();
 // PORT
@@ -54,6 +58,10 @@ app.use(passport.session());
 
 // Router
 app.use("/", pageRouter);
+app.use("/auth", authRouter);
+app.use("/post", postRouter);
+app.use("/user", userRouter);
+
 app.use((req, res, next) => {
   const error = new Error(`${req.method} ${req.url} 라우터가 없습니다.`);
   error.status = 404;

@@ -1,26 +1,61 @@
 import express from "express";
+import Hashtag from "../models/hashtag.js";
+import Post from "../models/post.js";
+import User from "../models/user.js";
+import { isLoggedIn, isNotLoggedIn } from "./middlewares.js";
 
 const router = express.Router();
 
 router.use((req, res, next) => {
-  res.locals.user = null;
-  res.locals.followerCount = 0;
-  res.locals.followingCount = 0;
-  res.locals.followerIdList = [];
+  res.locals.user = req.user;
+  res.locals.followerCount = req.user ? req.user.Followers.length : 0;
+  res.locals.followingCount = req.user ? req.user.Followings.length : 0;
+  res.locals.followerIdList = req.user
+    ? req.user.Followings.map((f) => f.id)
+    : [];
   next();
 });
 
-router.get("/profile", (req, res) => {
+router.get("/profile", isLoggedIn, (req, res) => {
   res.render("profile", { title: "내 정보 - 짹짹이" });
 });
 
-router.get("/join", (req, res) => {
+router.get("/join", isNotLoggedIn, (req, res) => {
   res.render("join", { title: "회원가입 - 짹짹이" });
 });
 
-router.get("/", (req, res, next) => {
-  const twits = [];
-  res.render("main", { title: "짹짹이", twits });
+router.get("/", async (req, res, next) => {
+  try {
+    const posts = await Post.findAll({
+      include: { model: User, attributes: ["id", "nick"] },
+      order: [["createdAt", "DESC"]],
+    });
+    res.render("main", { title: "짹짹이", twits: posts });
+  } catch (error) {
+    console.error(error);
+    next(error);
+  }
+});
+
+router.get("/hashtag", async (req, res, next) => {
+  const query = req.query.hashtag;
+  if (!query) {
+    return res.redirect("/");
+  }
+  try {
+    const hashtag = await Hashtag.findOne({ where: { title: query } });
+    let posts = [];
+    if (hashtag) {
+      posts = await hashtag.getPosts({ include: [{ model: User }] });
+    }
+    return res.render("main", {
+      title: `${query} | 짹짹이`,
+      twits: posts,
+    });
+  } catch (err) {
+    console.error(err);
+    return next(err);
+  }
 });
 
 export default router;

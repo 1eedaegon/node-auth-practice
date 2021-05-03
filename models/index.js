@@ -21,6 +21,6 @@ Hashtag.init(sequelize);
 User.associate(db);
 Post.associate(db);
 Hashtag.associate(db);
-
+console.log(db);
 export { db };
 export default sequelize;
